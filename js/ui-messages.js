@@ -41,6 +41,18 @@ var uiMessages = {
         joinBasics: 'JOIN giúp bạn kết hợp dữ liệu từ nhiều bảng. Ví dụ: kết hợp thông tin người dùng với đơn hàng của họ.',
         dragDrop: 'Kéo một bảng và thả lên bảng khác để tạo kết nối tự động.',
         suggestions: 'Hệ thống sẽ gợi ý các kết nối phù hợp dựa trên cấu trúc dữ liệu.',
-        manualJoin: 'Nếu không có gợi ý tự động, bạn có thể tạo kết nối thủ công bằng cách chọn trường phù hợp.'
+        manualJoin: 'Nếu không có gợi ý tự động, bạn có thể tạo kết nối thủ công bằng cách chọn trường phù hợp.',
+        subQueryBasics: 'SubQuery giúp tạo điều kiện phức tạp bằng cách sử dụng kết quả từ truy vấn khác.',
+        subQueryTypes: 'Có 5 loại SubQuery chính: IN, NOT IN, EXISTS, NOT EXISTS và Scalar SubQuery.',
+        subQuerySuggestions: 'Hệ thống tự động gợi ý các SubQuery phổ biến dựa trên bảng hiện tại và mối quan hệ dữ liệu.'
+    },
+    
+    // Giải thích SubQuery
+    subQueryExplanation: {
+        'where_in': 'Kiểm tra giá trị có trong danh sách kết quả của truy vấn con',
+        'where_not_in': 'Kiểm tra giá trị không có trong danh sách kết quả của truy vấn con',
+        'where_exists': 'Kiểm tra có tồn tại bản ghi thỏa mãn điều kiện trong truy vấn con',
+        'where_not_exists': 'Kiểm tra không tồn tại bản ghi thỏa mãn điều kiện trong truy vấn con',
+        'select_scalar': 'Lấy một giá trị duy nhất từ truy vấn con (COUNT, SUM, AVG, MAX, MIN)'
     }
 };
