@@ -3,8 +3,9 @@
 ![jQuery QueryBuilder](https://img.shields.io/badge/jQuery-QueryBuilder-blue)
 ![Version](https://img.shields.io/badge/version-2.7.0-green)
 ![License](https://img.shields.io/badge/license-MIT-blue)
+![PHP](https://img.shields.io/badge/PHP-Parser-purple)
 
-Một ứng dụng web mạnh mẽ giúp tạo các truy vấn SQL phức tạp một cách trực quan và dễ dàng thông qua giao diện kéo thả. Ứng dụng hỗ trợ tiếng Việt và được tối ưu hóa cho nhiều loại bảng dữ liệu khác nhau.
+Một ứng dụng web mạnh mẽ giúp tạo các truy vấn SQL phức tạp một cách trực quan và dễ dàng thông qua giao diện kéo thả. Ứng dụng hỗ trợ tiếng Việt và được tối ưu hóa cho nhiều loại bảng dữ liệu khác nhau. Bao gồm cả PHP Query Parser để xử lý và validate các query được tạo.
 
 ## 🌟 Tính năng chính
 
@@ -25,7 +26,9 @@ Một ứng dụng web mạnh mẽ giúp tạo các truy vấn SQL phức tạp 
 - **Validation**: Kiểm tra tính hợp lệ của dữ liệu đầu vào
 - **Multiple Operators**: Hỗ trợ đầy đủ các toán tử SQL
 - **Nested Conditions**: Tạo điều kiện lồng nhau phức tạp
-- **Auto-update**: Tự động cập nhật kết quả khi thay đổi
+- **Real-time Generation**: Tự động tạo SQL và JSON khi thay đổi
+- **PHP Query Parser**: Xử lý và validate query từ phía backend
+- **Query Templates**: Lưu và tái sử dụng các query mẫu
 - **Export Options**: Xuất ra SQL và JSON
 
 ## 🚀 Demo trực tuyến
@@ -64,17 +67,20 @@ npx http-server
 
 ```
 jsonbuilder-jquery/
-├── index.html              # File chính của ứng dụng
+├── index.html                  # File chính của ứng dụng
 ├── js/
-│   ├── app.js              # Logic chính của ứng dụng
-│   ├── table-manager.js    # Quản lý chuyển đổi giữa các bảng
-│   └── tables/             # Cấu hình các bảng dữ liệu
-│       ├── users.js        # Cấu hình bảng người dùng
-│       ├── products.js     # Cấu hình bảng sản phẩm
-│       ├── orders.js       # Cấu hình bảng đơn hàng
-│       ├── categories.js   # Cấu hình bảng danh mục
-│       └── reviews.js      # Cấu hình bảng đánh giá
-└── README.md               # Tài liệu hướng dẫn
+│   ├── app.js                  # Logic chính của ứng dụng
+│   ├── table-manager.js        # Quản lý chuyển đổi giữa các bảng
+│   └── tables/                 # Cấu hình các bảng dữ liệu
+│       ├── users.js            # Cấu hình bảng người dùng
+│       ├── products.js         # Cấu hình bảng sản phẩm
+│       ├── orders.js           # Cấu hình bảng đơn hàng
+│       ├── categories.js       # Cấu hình bảng danh mục
+│       └── reviews.js          # Cấu hình bảng đánh giá
+├── query/
+│   └── test1.json              # Query mẫu để test
+├── test_query_parser.php       # PHP Query Parser và validator
+└── README.md                   # Tài liệu hướng dẫn
 ```
 
 ## 🎯 Cách sử dụng
@@ -97,9 +103,19 @@ jsonbuilder-jquery/
 - **Real-time**: Kết quả được cập nhật ngay khi thay đổi
 
 ### Bước 4: Sử dụng kết quả
-- Copy SQL query để sử dụng trong database
-- Copy JSON rules để lưu trữ hoặc tái sử dụng
-- Sử dụng nút "Reset" để bắt đầu lại
+- **Copy SQL query**: Sử dụng trực tiếp trong database
+- **Copy JSON rules**: Lưu trữ hoặc tái sử dụng query
+- **PHP Processing**: Sử dụng `test_query_parser.php` để xử lý query từ backend
+- **Reset**: Sử dụng nút "Reset" để bắt đầu lại
+
+### Bước 5: Xử lý với PHP (Backend)
+```php
+// Sử dụng PHP Query Parser
+$parser = new QueryBuilderParser();
+$jsonQuery = file_get_contents('query/test1.json');
+$sql = $parser->parseQuery($jsonQuery, 'users');
+echo $sql; // SELECT * FROM `users` WHERE ...
+```
 
 ## 📊 Các loại dữ liệu được hỗ trợ
 
@@ -158,7 +174,24 @@ tables: {
 }
 ```
 
-4. Cập nhật dropdown selector
+4. Cập nhật dropdown selector trong `createTableSelector()`
+
+### Tùy chỉnh PHP Parser
+```php
+// Mở rộng QueryBuilderParser class
+class CustomQueryBuilderParser extends QueryBuilderParser {
+    // Thêm operators tùy chỉnh
+    protected $customOperators = [
+        'custom_op' => 'CUSTOM_SQL_OP'
+    ];
+    
+    // Override parseRule để xử lý logic đặc biệt
+    protected function parseRule($rule) {
+        // Custom logic here
+        return parent::parseRule($rule);
+    }
+}
+```
 
 ### Tùy chỉnh operators
 Có thể sử dụng các operators sau:
@@ -178,103 +211,67 @@ Có thể sử dụng các operators sau:
 ## 🎨 Ví dụ sử dụng
 
 ### Ví dụ 1: Tìm người dùng hoạt động
+**JSON Query:**
+```json
+{
+  "condition": "AND",
+  "rules": [
+    {"id": "status", "operator": "equal", "value": "active"},
+    {"id": "age", "operator": "greater_or_equal", "value": 18}
+  ]
+}
+```
+
+**SQL Output:**
 ```sql
-SELECT * FROM users 
-WHERE status = 'active' 
-AND age >= 18
+SELECT * FROM `users` 
+WHERE `status` = 'active' 
+  AND `age` >= 18
 ```
 
 ### Ví dụ 2: Tìm sản phẩm giảm giá
-```sql
-SELECT * FROM products 
-WHERE status = 'active' 
-AND stock_quantity > 0 
-AND discount_percent > 10
+**JSON Query:**
+```json
+{
+  "condition": "AND",
+  "rules": [
+    {"id": "status", "operator": "equal", "value": "active"},
+    {"id": "stock_quantity", "operator": "greater", "value": 0},
+    {"id": "discount_percent", "operator": "greater", "value": 10}
+  ]
+}
 ```
 
-### Ví dụ 3: Đơn hàng trong tháng
+**SQL Output:**
 ```sql
-SELECT * FROM orders 
-WHERE status IN ('completed', 'processing') 
-AND created_at BETWEEN '2024-01-01' AND '2024-01-31'
+SELECT * FROM `products` 
+WHERE `status` = 'active' 
+  AND `stock_quantity` > 0 
+  AND `discount_percent` > 10
 ```
 
-## 🔍 Troubleshooting
+### Ví dụ 3: Query phức tạp với nested conditions
+**JSON Query:**
+```json
+{
+  "condition": "AND",
+  "rules": [
+    {"id": "status", "operator": "equal", "value": "active"},
+    {
+      "condition": "OR",
+      "rules": [
+        {"id": "username", "operator": "contains", "value": "admin"},
+        {"id": "email", "operator": "ends_with", "value": "@company.com"}
+      ]
+    }
+  ]
+}
+```
 
-### Lỗi thường gặp
-
-**1. Không load được QueryBuilder**
-- Kiểm tra kết nối internet
-- Đảm bảo các CDN links hoạt động
-- Kiểm tra console browser để xem lỗi JavaScript
-
-**2. Validation không hoạt động**
-- Kiểm tra regex pattern trong cấu hình
-- Đảm bảo định dạng dữ liệu đúng
-- Xem console để debug validation errors
-
-**3. SQL không được tạo**
-- Kiểm tra tất cả rules đã được điền đầy đủ
-- Đảm bảo không có lỗi validation
-- Thử reset và tạo lại query
-
-### Debug mode
-Mở Developer Tools (F12) để xem:
-- Console logs
-- Network requests
-- JavaScript errors
-
-## 🤝 Đóng góp
-
-Chúng tôi hoan nghênh mọi đóng góp! Để đóng góp:
-
-1. Fork repository
-2. Tạo feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to branch (`git push origin feature/AmazingFeature`)
-5. Tạo Pull Request
-
-### Coding Standards
-- Sử dụng tiếng Việt cho comments và labels
-- Tuân thủ JavaScript ES5+ standards
-- Đảm bảo responsive design
-- Thêm validation cho các trường mới
-
-## 📝 Changelog
-
-### Version 1.0.0 (Current)
-- ✅ Giao diện cơ bản với 5 bảng dữ liệu
-- ✅ Hỗ trợ đầy đủ các operators SQL
-- ✅ Real-time query generation
-- ✅ Validation và error handling
-- ✅ Responsive design
-
-### Planned Features
-- 🔄 Export to different formats (CSV, Excel)
-- 🔄 Save/Load query templates
-- 🔄 Advanced date/time pickers
-- 🔄 Query history
-- 🔄 Database connection integration
-
-## 📄 License
-
-Dự án này được phân phối dưới giấy phép MIT. Xem file `LICENSE` để biết thêm chi tiết.
-
-## 🙏 Acknowledgments
-
-- [jQuery QueryBuilder](https://querybuilder.js.org/) - Core library
-- [Tailwind CSS](https://tailwindcss.com/) - Styling framework
-- [Bootstrap](https://getbootstrap.com/) - UI components
-- [Font Awesome](https://fontawesome.com/) - Icons
-
-## 📞 Liên hệ
-
-- **Email**: [your-email@example.com]
-- **GitHub**: [your-github-profile]
-- **Website**: [your-website.com]
-
----
-
-⭐ Nếu dự án này hữu ích, hãy cho chúng tôi một star trên GitHub!
-
-**Made with ❤️ in Vietnam**
+**SQL Output:**
+```sql
+SELECT * FROM `users` 
+WHERE `status` = 'active' 
+  AND (`username` LIKE '%admin%' 
+    OR `email` LIKE '%@company.com')
+```
