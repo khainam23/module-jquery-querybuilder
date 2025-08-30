@@ -315,12 +315,6 @@ var SubQueryManager = {
             self.removeSubQuery(subqueryId);
         });
         
-        // Chỉnh sửa sub query
-        $(document).on('click', '.edit-subquery', function() {
-            var subqueryId = $(this).data('id');
-            self.editSubQuery(subqueryId);
-        });
-        
         // Lắng nghe thay đổi bảng
         $(document).on('tableChanged', function(event, tableName) {
             self.createSubQuerySuggestions();
@@ -669,9 +663,6 @@ var SubQueryManager = {
                             </div>
                             
                             <div class="flex space-x-2 ml-4">
-                                <button class="edit-subquery text-blue-500 hover:text-blue-700 p-1" data-id="${subQuery.id}" title="Chỉnh sửa">
-                                    <i class="fas fa-edit"></i>
-                                </button>
                                 <button class="remove-subquery text-red-500 hover:text-red-700 p-1" data-id="${subQuery.id}" title="Xóa">
                                     <i class="fas fa-trash"></i>
                                 </button>
@@ -716,15 +707,6 @@ var SubQueryManager = {
             this.updateSubQueriesList();
             this.updateQueryBuilder();
             this.showNotification('Đã xóa truy vấn con!', 'success');
-        }
-    },
-
-    // Chỉnh sửa Sub Query
-    editSubQuery: function(subqueryId) {
-        var subQuery = this.subQueries.find(sq => sq.id === subqueryId);
-        if (subQuery) {
-            // Tạm thời chỉ hiển thị thông báo, có thể mở rộng sau
-            alert('Tính năng chỉnh sửa sẽ được phát triển trong phiên bản tiếp theo');
         }
     },
 
