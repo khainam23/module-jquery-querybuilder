@@ -76,6 +76,9 @@ var TableManager = {
         setTimeout(function() {
             $('#btn-get').trigger('click');
         }, 500);
+        
+        // Thông báo thay đổi bảng cho JoinManager
+        $(document).trigger('tableChanged', [tableName]);
     },
 
     // Update table information display

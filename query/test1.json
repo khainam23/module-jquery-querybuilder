@@ -2,33 +2,20 @@
   "condition": "AND",
   "rules": [
     {
-      "id": "status",
-      "field": "status",
-      "type": "string",
-      "input": "select",
+      "id": "users.is_verified",
+      "field": "users.is_verified",
+      "type": "boolean",
+      "input": "radio",
       "operator": "equal",
-      "value": "active"
+      "value": true
     },
     {
-      "id": "username",
-      "field": "username",
-      "type": "string",
-      "input": "text",
-      "operator": "equal",
-      "value": "Nam"
-    },
-    {
-      "condition": "AND",
-      "rules": [
-        {
-          "id": "created_at",
-          "field": "created_at",
-          "type": "datetime",
-          "input": "text",
-          "operator": "less",
-          "value": "12/10/200"
-        }
-      ]
+      "id": "orders.shipping_fee",
+      "field": "orders.shipping_fee",
+      "type": "double",
+      "input": "number",
+      "operator": "less",
+      "value": 50000
     }
   ],
   "valid": true

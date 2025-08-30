@@ -1,6 +1,12 @@
 $(document).ready(function () {
     // Khởi tạo TableManager
     TableManager.init();
+    
+    // Khởi tạo JoinManager
+    JoinManager.init();
+    
+    // Khởi tạo Tutorial Helper
+    TutorialHelper.init();
 
     // Xử lý nút "Tạo Query"
     $('#btn-get').on('click', function () {
@@ -11,6 +17,12 @@ $(document).ready(function () {
             if (isValid) {
                 var result = $('#builder').queryBuilder('getSQL');
                 var sqlText = (result && result.sql) ? result.sql : uiMessages.noSqlGenerated;
+                
+                // Thêm JOIN vào SQL nếu có
+                if (typeof JoinManager !== 'undefined' && JoinManager.joins.length > 0) {
+                    sqlText = JoinManager.generateJoinSQL(sqlText);
+                }
+                
                 $('#sql-result').text(sqlText);
 
                 var rules = $('#builder').queryBuilder('getRules');

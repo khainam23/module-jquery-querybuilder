@@ -15,10 +15,165 @@ class QueryBuilderParser {
         'is_null'=>'IS NULL','is_not_null'=>'IS NOT NULL'
     ];
 
+    // Bản đồ quan hệ giữa các bảng (tương tự như trong join-manager.js)
+    private $relationshipMap = [
+        'users-orders' => [
+            'leftTable' => 'users',
+            'rightTable' => 'orders',
+            'leftField' => 'id',
+            'rightField' => 'user_id',
+            'joinType' => 'LEFT JOIN'
+        ],
+        'orders-products' => [
+            'leftTable' => 'orders',
+            'rightTable' => 'products',
+            'leftField' => 'id',
+            'rightField' => 'id',
+            'joinType' => 'INNER JOIN',
+            'throughTable' => 'order_items',
+            'throughFields' => ['order_id', 'product_id']
+        ],
+        'products-categories' => [
+            'leftTable' => 'products',
+            'rightTable' => 'categories',
+            'leftField' => 'category_id',
+            'rightField' => 'id',
+            'joinType' => 'INNER JOIN'
+        ],
+        'products-reviews' => [
+            'leftTable' => 'products',
+            'rightTable' => 'reviews',
+            'leftField' => 'id',
+            'rightField' => 'product_id',
+            'joinType' => 'LEFT JOIN'
+        ],
+        'users-reviews' => [
+            'leftTable' => 'users',
+            'rightTable' => 'reviews',
+            'leftField' => 'id',
+            'rightField' => 'user_id',
+            'joinType' => 'LEFT JOIN'
+        ]
+    ];
+
     public function parseQuery($query, $table='users') {
         if (is_string($query)) $query = json_decode($query,true);
         if (!$query || !isset($query['rules'])) return '';
-        return "SELECT * FROM `{$table}` WHERE ".$this->parseRules($query);
+        
+        // Phát hiện các bảng được sử dụng trong query
+        $tablesUsed = $this->detectTablesInQuery($query);
+        
+        // Tạo FROM clause với JOIN nếu cần
+        $fromClause = $this->buildFromClause($table, $tablesUsed);
+        
+        return "SELECT * FROM {$fromClause} WHERE ".$this->parseRules($query);
+    }
+
+    // Phát hiện các bảng được sử dụng trong query
+    private function detectTablesInQuery($query) {
+        $tables = [];
+        $this->extractTablesFromRules($query, $tables);
+        return array_unique($tables);
+    }
+
+    // Trích xuất tên bảng từ các rules (đệ quy)
+    private function extractTablesFromRules($group, &$tables) {
+        if (!isset($group['rules']) || !is_array($group['rules'])) return;
+        
+        foreach ($group['rules'] as $rule) {
+            if (isset($rule['rules'])) {
+                // Đây là một group con, đệ quy
+                $this->extractTablesFromRules($rule, $tables);
+            } elseif (isset($rule['field'])) {
+                // Đây là một rule, trích xuất tên bảng từ field
+                $field = $rule['field'];
+                if (strpos($field, '.') !== false) {
+                    $tableName = explode('.', $field)[0];
+                    $tables[] = $tableName;
+                }
+            }
+        }
+    }
+
+    // Tạo FROM clause với JOIN
+    private function buildFromClause($mainTable, $tablesUsed) {
+        if (empty($tablesUsed) || (count($tablesUsed) == 1 && $tablesUsed[0] == $mainTable)) {
+            return "`{$mainTable}`";
+        }
+
+        $fromClause = "`{$mainTable}`";
+        $joinedTables = [$mainTable];
+        
+        // Tạo JOIN cho từng bảng
+        foreach ($tablesUsed as $table) {
+            if ($table != $mainTable && !in_array($table, $joinedTables)) {
+                $joinClause = $this->findJoinClause($mainTable, $table, $joinedTables);
+                if ($joinClause) {
+                    $fromClause .= " " . $joinClause;
+                    $joinedTables[] = $table;
+                }
+            }
+        }
+        
+        return $fromClause;
+    }
+
+    // Tìm JOIN clause phù hợp giữa hai bảng
+    private function findJoinClause($fromTable, $toTable, $joinedTables) {
+        // Thử tìm quan hệ trực tiếp
+        $relationship = $this->findRelationship($fromTable, $toTable);
+        if ($relationship) {
+            return $this->buildJoinClause($relationship);
+        }
+        
+        // Thử tìm quan hệ gián tiếp qua các bảng đã JOIN
+        foreach ($joinedTables as $intermediateTable) {
+            if ($intermediateTable != $fromTable) {
+                $relationship = $this->findRelationship($intermediateTable, $toTable);
+                if ($relationship) {
+                    return $this->buildJoinClause($relationship);
+                }
+            }
+        }
+        
+        return null;
+    }
+
+    // Tìm quan hệ giữa hai bảng
+    private function findRelationship($table1, $table2) {
+        $key1 = $table1 . '-' . $table2;
+        $key2 = $table2 . '-' . $table1;
+        
+        if (isset($this->relationshipMap[$key1])) {
+            return $this->relationshipMap[$key1];
+        } elseif (isset($this->relationshipMap[$key2])) {
+            // Đảo ngược quan hệ
+            $rel = $this->relationshipMap[$key2];
+            return [
+                'leftTable' => $rel['rightTable'],
+                'rightTable' => $rel['leftTable'],
+                'leftField' => $rel['rightField'],
+                'rightField' => $rel['leftField'],
+                'joinType' => $rel['joinType']
+            ];
+        }
+        
+        return null;
+    }
+
+    // Tạo JOIN clause từ relationship
+    private function buildJoinClause($relationship) {
+        if (isset($relationship['throughTable'])) {
+            // Many-to-many relationship với bảng trung gian
+            $throughTable = $relationship['throughTable'];
+            $throughFields = $relationship['throughFields'];
+            
+            return "{$relationship['joinType']} `{$throughTable}` ON `{$relationship['leftTable']}`.`{$relationship['leftField']}` = `{$throughTable}`.`{$throughFields[0]}` " .
+                   "{$relationship['joinType']} `{$relationship['rightTable']}` ON `{$throughTable}`.`{$throughFields[1]}` = `{$relationship['rightTable']}`.`{$relationship['rightField']}`";
+        } else {
+            // Quan hệ trực tiếp
+            return "{$relationship['joinType']} `{$relationship['rightTable']}` ON `{$relationship['leftTable']}`.`{$relationship['leftField']}` = `{$relationship['rightTable']}`.`{$relationship['rightField']}`";
+        }
     }
 
     private function parseRules($group) {
