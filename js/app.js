@@ -2,11 +2,17 @@ $(document).ready(function () {
     // Khởi tạo TableManager
     TableManager.init();
     
-    // Khởi tạo JoinManager
-    JoinManager.init();
-    
-    // Khởi tạo Tutorial Helper
-    TutorialHelper.init();
+    // Đợi TableManager khởi tạo xong rồi mới khởi tạo các manager khác
+    setTimeout(function() {
+        // Khởi tạo JoinManager
+        JoinManager.init();
+        
+        // Khởi tạo SubQueryManager
+        SubQueryManager.init();
+        
+        // Khởi tạo Tutorial Helper
+        TutorialHelper.init();
+    }, 100);
 
     // Xử lý nút "Tạo Query"
     $('#btn-get').on('click', function () {
@@ -21,6 +27,11 @@ $(document).ready(function () {
                 // Thêm JOIN vào SQL nếu có
                 if (typeof JoinManager !== 'undefined' && JoinManager.joins.length > 0) {
                     sqlText = JoinManager.generateJoinSQL(sqlText);
+                }
+                
+                // Thêm Sub Query vào SQL nếu có
+                if (typeof SubQueryManager !== 'undefined' && SubQueryManager.subQueries.length > 0) {
+                    sqlText = SubQueryManager.generateSubQuerySQL(sqlText);
                 }
                 
                 $('#sql-result').text(sqlText);
