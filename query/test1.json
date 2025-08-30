@@ -1,0 +1,35 @@
+{
+  "condition": "AND",
+  "rules": [
+    {
+      "id": "status",
+      "field": "status",
+      "type": "string",
+      "input": "select",
+      "operator": "equal",
+      "value": "active"
+    },
+    {
+      "id": "username",
+      "field": "username",
+      "type": "string",
+      "input": "text",
+      "operator": "equal",
+      "value": "Nam"
+    },
+    {
+      "condition": "AND",
+      "rules": [
+        {
+          "id": "created_at",
+          "field": "created_at",
+          "type": "datetime",
+          "input": "text",
+          "operator": "less",
+          "value": "12/10/200"
+        }
+      ]
+    }
+  ],
+  "valid": true
+}
