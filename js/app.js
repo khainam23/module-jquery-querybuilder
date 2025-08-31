@@ -30,8 +30,8 @@ $(document).ready(function () {
                 }
                 
                 // Thêm Sub Query vào SQL nếu có
-                if (typeof SubQueryManager !== 'undefined' && SubQueryManager.subQueries.length > 0) {
-                    sqlText = SubQueryManager.generateSubQuerySQL(sqlText);
+                if (typeof SubQueryManager !== 'undefined') {
+                    sqlText = SubQueryManager.generateSQL(sqlText);
                 }
                 
                 $('#sql-result').text(sqlText);
